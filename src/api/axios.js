@@ -2,7 +2,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API = axios.create({
-  baseURL: 'https://konvo-backend-jv18.onrender.com',
+  baseURL: 'https://konvo-backend-jv18.onrender.com/api',
 });
 
 API.interceptors.request.use(async (config) => {
