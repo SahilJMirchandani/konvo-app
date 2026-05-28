@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createStackNavigator } from '@react-navigation/stack';
 import { useSelector } from 'react-redux';
 
 import LoginScreen from '../screens/LoginScreen';
@@ -8,7 +8,7 @@ import OTPScreen from '../screens/OTPScreen';
 import ProjectsScreen from '../screens/ProjectsScreen';
 import TasksScreen from '../screens/TasksScreen';
 
-const Stack = createNativeStackNavigator();
+const Stack = createStackNavigator();
 
 export default function AppNavigator() {
   const token = useSelector((state) => state.auth.token);
@@ -19,7 +19,7 @@ export default function AppNavigator() {
         {!token ? (
           <>
             <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="OTPScreen" component={OTPScreen} />
+            <Stack.Screen name="OTP" component={OTPScreen} />
           </>
         ) : (
           <>
