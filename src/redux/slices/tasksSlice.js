@@ -51,10 +51,16 @@ const tasksSlice = createSlice({
       .addCase(createTask.fulfilled, (state, action) => { state.creating = false; state.list.push(action.payload); })
       .addCase(createTask.rejected, (state, action) => { state.creating = false; state.error = action.payload; })
 
+      .addCase(toggleTask.pending, (state) => { state.loading = false; })
       .addCase(toggleTask.fulfilled, (state, action) => {
         const index = state.list.findIndex(t => t.id === action.payload.id);
         if (index !== -1) state.list[index] = action.payload;
       })
+      .addCase(toggleTask.rejected, (state, action) => {
+        state.error = action.payload;
+        console.log('Toggle error:', action.payload);
+      })
+
       .addCase(deleteTask.fulfilled, (state, action) => {
         state.list = state.list.filter(t => t.id !== action.payload);
       });
