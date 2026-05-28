@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, useColorScheme, Modal } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, useColorScheme, Modal, Alert } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchTasks, createTask, toggleTask, deleteTask } from '../redux/slices/tasksSlice';
 import TaskCard from '../components/TaskCard';
@@ -7,7 +7,7 @@ import TaskCard from '../components/TaskCard';
 export default function TasksScreen({ route }) {
   const { projectId, projectTitle } = route.params;
   const dispatch = useDispatch();
-  const { list, loading } = useSelector((state) => state.tasks);
+  const { list, loading, creating } = useSelector((state) => state.tasks);
   const scheme = useColorScheme();
   const dark = scheme === 'dark';
 
@@ -18,9 +18,16 @@ export default function TasksScreen({ route }) {
   useEffect(() => { dispatch(fetchTasks(projectId)); }, [projectId]);
 
   const handleCreate = async () => {
-    if (!title.trim()) return;
-    await dispatch(createTask({ projectId, data: { title, due_date: dueDate || null } }));
-    setTitle(''); setDueDate(''); setModalVisible(false);
+    if (!title.trim()) {
+      Alert.alert('Validation', 'Please enter a task title.');
+      return;
+    }
+    const result = await dispatch(createTask({ projectId, data: { title, due_date: dueDate || null } }));
+    if (createTask.fulfilled.match(result)) {
+      setTitle(''); setDueDate(''); setModalVisible(false);
+    } else {
+      Alert.alert('Error', result.payload?.message || 'Failed to create task. Try again.');
+    }
   };
 
   return (
@@ -61,10 +68,17 @@ export default function TasksScreen({ route }) {
               placeholder="Due date (optional, e.g. 2025-06-01)" placeholderTextColor={dark ? '#666' : '#aaa'}
               value={dueDate} onChangeText={setDueDate}
             />
-            <TouchableOpacity style={styles.button} onPress={handleCreate}>
-              <Text style={styles.buttonText}>Add Task</Text>
+            <TouchableOpacity
+              style={[styles.button, creating && { opacity: 0.7 }]}
+              onPress={handleCreate}
+              disabled={creating}
+            >
+              {creating
+                ? <ActivityIndicator color="#fff" />
+                : <Text style={styles.buttonText}>Add Task</Text>
+              }
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => setModalVisible(false)}>
+            <TouchableOpacity onPress={() => setModalVisible(false)} disabled={creating}>
               <Text style={[styles.cancel, { color: dark ? '#aaa' : '#888' }]}>Cancel</Text>
             </TouchableOpacity>
           </View>
