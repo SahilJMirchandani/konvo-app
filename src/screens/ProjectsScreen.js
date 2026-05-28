@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, useColorScheme, Modal } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, useColorScheme, Modal, Alert } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchProjects, createProject, deleteProject } from '../redux/slices/projectsSlice';
 import { logout } from '../redux/slices/authSlice';
@@ -7,7 +7,7 @@ import ProjectCard from '../components/ProjectCard';
 
 export default function ProjectsScreen({ navigation }) {
   const dispatch = useDispatch();
-  const { list, loading } = useSelector((state) => state.projects);
+  const { list, loading, creating } = useSelector((state) => state.projects);
   const scheme = useColorScheme();
   const dark = scheme === 'dark';
 
@@ -18,9 +18,18 @@ export default function ProjectsScreen({ navigation }) {
   useEffect(() => { dispatch(fetchProjects()); }, []);
 
   const handleCreate = async () => {
-    if (!title.trim()) return;
-    await dispatch(createProject({ title, description }));
-    setTitle(''); setDescription(''); setModalVisible(false);
+    if (!title.trim()) {
+      Alert.alert('Validation', 'Please enter a project title.');
+      return;
+    }
+    const result = await dispatch(createProject({ title, description }));
+    if (createProject.fulfilled.match(result)) {
+      setTitle('');
+      setDescription('');
+      setModalVisible(false);
+    } else {
+      Alert.alert('Error', result.payload?.message || 'Failed to create project. Try again.');
+    }
   };
 
   return (
@@ -66,10 +75,17 @@ export default function ProjectsScreen({ navigation }) {
               placeholder="Description" placeholderTextColor={dark ? '#666' : '#aaa'}
               value={description} onChangeText={setDescription}
             />
-            <TouchableOpacity style={styles.button} onPress={handleCreate}>
-              <Text style={styles.buttonText}>Create</Text>
+            <TouchableOpacity 
+              style={[styles.button, creating && { opacity: 0.7 }]} 
+              onPress={handleCreate}
+              disabled={creating}
+            >
+              {creating 
+                ? <ActivityIndicator color="#fff" /> 
+                : <Text style={styles.buttonText}>Create</Text>
+              }
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => setModalVisible(false)}>
+            <TouchableOpacity onPress={() => setModalVisible(false)} disabled={creating}>
               <Text style={[styles.cancel, { color: dark ? '#aaa' : '#888' }]}>Cancel</Text>
             </TouchableOpacity>
           </View>
